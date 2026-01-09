@@ -1,0 +1,4 @@
+OPTIONS http://matrix.me/api/ota/firmware
+Origin: http://127.0.0.1:5500
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: x-ota-token, content-type

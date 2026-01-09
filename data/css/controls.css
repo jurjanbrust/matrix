@@ -1,0 +1,374 @@
+/* Button Styles */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+/* Button Variants */
+.btn-primary {
+    background: linear-gradient(135deg, #4f46e5, #6366f1);
+    color: #f8fafc;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #14b8a6, #0d9488);
+    color: #f0fdfa;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #facc15, #f59e0b);
+    color: #422006;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #f87171, #ef4444);
+    color: #fef2f2;
+}
+
+/* Override playback buttons to share the neon styling */
+/* GIF playback buttons use custom neon styling defined in style.css */
+
+.btn-icon {
+    font-size: 1.1rem;
+}
+
+/* Control Sections */
+.brightness-control {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.slider-container {
+    position: relative;
+}
+
+.slider-label {
+    display: block;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}
+
+/* Custom Slider Styles */
+.brightness-slider {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(to right, #667eea, #764ba2);
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+}
+
+.brightness-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border: 3px solid #667eea;
+    transition: all 0.3s ease;
+}
+
+.brightness-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.brightness-slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border: 3px solid #667eea;
+    transition: all 0.3s ease;
+}
+
+.brightness-slider::-moz-range-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Quick Brightness Buttons */
+.quick-brightness-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.quick-brightness-buttons .btn {
+    flex: 1;
+    min-width: 80px;
+    justify-content: center;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+}
+
+/* Control Buttons */
+.control-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.control-buttons .btn {
+    flex: 1;
+    min-width: 180px;
+    justify-content: center;
+}
+
+.mode-gif-wrapper {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.mode-gif {
+    width: 180px;
+    max-width: 100%;
+    border-radius: 16px;
+    border: 3px solid #4f46e5;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.mode-gif:hover {
+    transform: scale(1.05);
+    box-shadow: 0 16px 35px rgba(0, 0, 0, 0.3);
+}
+
+/* Loading and Status Indicators */
+.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Success/Error Messages */
+.message {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 10px 0;
+    font-weight: 500;
+    animation: slideIn 0.3s ease;
+}
+
+.message.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Control Styles */
+@media (max-width: 768px) {
+    .control-buttons {
+        flex-direction: column;
+    }
+    
+    .control-buttons .btn {
+        min-width: 100%;
+    }
+    
+    .quick-brightness-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .quick-brightness-buttons .btn {
+        min-width: 100%;
+    }
+}
+
+.status-value {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px; /* Makes it look like a balloon/pill */
+    color: white; /* Text color inside the balloon */
+    font-weight: bold;
+    min-width: 80px; /* Ensure a consistent size */
+    text-align: center;
+}
+
+.status-value.connected {
+    background-color: #28a745; /* Green for connected */
+}
+
+.status-value.error {
+    background-color: #ffc107; /* Yellow for not connected/error */
+    color: #343a40; /* Darker text for better contrast on yellow */
+}
+
+/* Optional: Add a style for info if you use it for transient messages */
+.status-value.info {
+    background-color: #17a2b8; /* Blue for info */
+}
+
+/* Optional: Add a style for success if different from connected */
+.status-value.success {
+    background-color: #28a745; /* Green, same as connected for general success */
+}
+
+/* Styling for Randomize Folders Checkbox */
+#randomize-folders {
+    margin-right: 8px;
+    accent-color: #0078d4; /* Matches primary theme color */
+}
+
+label[for="randomize-folders"] {
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    gap: 8px;
+}
+
+label[for="randomize-folders"]:hover {
+    color: #0078d4;
+}
+
+/* Styling for control-divider */
+.control-divider {
+    margin: 16px 0;
+    border: none;
+    border-top: 1px solid #ccc;
+}
+
+
+.timezone-control {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.timezone-label {
+    font-weight: 600;
+    color: #333;
+}
+
+.timezone-control select,
+.timezone-control input[type="text"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    background: linear-gradient(180deg, #ffffff, #f6f8fa);
+    font-size: 1rem;
+    font-weight: 600;
+    color: #222;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    transition: transform 0.12s ease, box-shadow 0.18s ease, border 0.2s ease;
+}
+
+.timezone-control select {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'><path fill='%23333' d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px 12px;
+    padding-right: 40px;
+    cursor: pointer;
+}
+
+.timezone-control select:hover,
+.timezone-control input[type="text"]:hover,
+.timezone-control select:focus,
+.timezone-control input[type="text"]:focus {
+    transform: translateY(-1px);
+    border-color: #0078d4;
+    box-shadow: 0 8px 20px rgba(0, 120, 212, 0.12);
+    outline: none;
+}
+
+.timezone-input-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #4a4a4a;
+}
+
+.timezone-control .helper-text {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #6c757d;
+}

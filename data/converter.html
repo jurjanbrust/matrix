@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image to 128x32 Editor</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/converter.css" />
+    <style>
+      .download-options {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .save-option {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9em;
+        color: #666;
+      }
+      .save-option label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+      }
+      .save-option input[type="checkbox"] {
+        transform: scale(1.2);
+      }
+    </style>
+    <script src="/js/gif.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <div
+          class="header-title-bar"
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <h1 class="title" style="margin: 0">
+            <span class="pixel-icon">🎨</span>
+            Pixel Matrix FX Control
+          </h1>
+          <div class="status-bar">
+            <div class="status-item" style="text-align: right">
+              <span class="status-label">Status:</span>
+              <span class="status-value connected">Connected</span>
+            </div>
+          </div>
+        </div>
+        <nav class="main-nav">
+          <ul>
+            <li><a href="index.html">Device Info</a></li>
+            <li><a href="converter.html">Image Converter</a></li>
+            <li><a href="filemgmt.html">File Management</a></li>            
+            <li><a href="api.html">API Docs</a></li>
+          </ul>
+        </nav>
+      </header>
+
+      <div class="editor-grid">
+        <div class="panel">
+          <h3>📁 Source Image</h3>
+          <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">🖼️</div>
+            <div class="upload-text">
+              Drop your image here or click to browse
+            </div>
+            <div class="upload-hint">
+              Supports GIF & JPEG formats • Max 10MB
+            </div>
+          </div>
+          <input
+            type="file"
+            id="fileInput"
+            accept=".gif,.jpg,.jpeg"
+            class="hidden"
+          />
+
+          <div id="originalPreview" class="preview-container hidden">
+            <div class="preview-box">
+              <div class="preview-label">Original</div>
+              <img id="originalImage" alt="Original" />
+              <div class="size-info" id="originalSize"></div>
+            </div>
+          </div>
+
+          <div class="controls" id="controls" style="display: none">
+            <div class="control-group">
+              <label for="resizeMode">Resize Method:</label>
+              <select id="resizeMode">
+                <option value="cover">Smart Crop (Fill 128×32)</option>
+                <option value="contain">Fit Inside (Maintain Aspect)</option>
+                <option value="stretch">Stretch to Fit</option>
+                <option value="scroll-top" selected>
+                  Animated Scroll (Top to Bottom)
+                </option>
+                <option value="scroll-bottom">
+                  Animated Scroll (Bottom to Top)
+                </option>
+                <option value="scroll-top-bounce">
+                  Animated Scroll (Top to Bottom and Back)
+                </option>
+                <option value="scroll-bottom-bounce">
+                  Animated Scroll (Bottom to Top and Back)
+                </option>
+              </select>
+            </div>
+
+            <div
+              class="control-group"
+              id="animationControls"
+              style="display: none"
+            >
+              <label for="frameRate"
+                >Animation Speed:
+                <span class="range-value" id="frameRateValue">10</span>
+                FPS</label
+              >
+              <input type="range" id="frameRate" min="5" max="30" value="10" />
+
+              <label for="scrollSpeed"
+                >Scroll Speed:
+                <span class="range-value" id="scrollSpeedValue">2</span>
+                px/frame</label
+              >
+              <input type="range" id="scrollSpeed" min="1" max="8" value="2" />
+            </div>
+
+            <div class="control-group">
+              <label for="quality"
+                >JPEG Quality:
+                <span class="range-value" id="qualityValue">90</span></label
+              >
+              <input type="range" id="quality" min="10" max="100" value="90" />
+            </div>
+
+            <button class="btn" id="convertBtn">Convert to 128×32</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>🎯 128×32 Result</h3>
+
+          <div id="processing" class="processing hidden">
+            <div class="spinner"></div>
+            <p>Converting to 128×32...</p>
+          </div>
+
+          <div id="resultPreview" class="preview-container hidden">
+            <div class="preview-box">
+              <div class="preview-label">128×32 Result</div>
+              <img id="resultImage" alt="Converted" />
+              <div class="size-info">128 × 32 pixels</div>
+            </div>
+            <div
+              id="gifProgressBarContainer"
+              style="display: none; margin: 10px 0"
+            >
+              <div
+                style="
+                  background: #e2e8f0;
+                  border-radius: 8px;
+                  height: 18px;
+                  width: 100%;
+                  overflow: hidden;
+                "
+              >
+                <div
+                  id="gifProgressBar"
+                  style="
+                    background: linear-gradient(90deg, #667eea, #764ba2);
+                    height: 100%;
+                    width: 0%;
+                    transition: width 0.2s;
+                  "
+                ></div>
+              </div>
+              <div
+                id="gifProgressText"
+                style="
+                  text-align: center;
+                  font-size: 0.95em;
+                  color: #444;
+                  margin-top: 2px;
+                "
+              >
+                Rendering GIF: 0%
+              </div>
+            </div>
+            <div class="download-options">
+              <button class="btn btn-download" id="downloadBtn">
+                Download 128×32 Image
+              </button>
+              <button class="btn btn-download" id="saveToSDBtn" style="background: #10b981; color: #fff;">
+                Save to SD Card
+              </button>
+            </div>
+          </div>
+
+          <div id="stats" class="stats hidden">
+            <h4>📊 Conversion Stats</h4>
+            <p id="originalDimensions"></p>
+            <p id="compressionRatio"></p>
+            <p id="fileSize"></p>
+          </div>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <p>&copy; 2026 Pixel Matrix FX</p>
+      </footer>
+    </div>
+
+    <script>
+      class GifTo128x32Editor {
+        constructor() {
+          this.originalImage = null;
+          this.canvas = document.createElement("canvas");
+          this.ctx = this.canvas.getContext("2d");
+          this.animationTimeout = null;
+          this.resultBlob = null;
+          this.resultObjectUrl = null;
+          this.initializeEventListeners();
+        }
+
+        cleanup() {
+          // Stop any running animation
+          if (this.animationTimeout) {
+            clearTimeout(this.animationTimeout);
+            this.animationTimeout = null;
+          }
+
+          // Clear all results
+          this.resultFrames = null;
+          this.resultDataUrl = null;
+          this.resultBlob = null;
+          if (this.resultObjectUrl) {
+            URL.revokeObjectURL(this.resultObjectUrl);
+            this.resultObjectUrl = null;
+          }
+          
+          // Reset UI
+          const resultImg = document.getElementById("resultImage");
+          if (resultImg) resultImg.src = '';
+          
+          const progressBarContainer = document.getElementById("gifProgressBarContainer");
+          if (progressBarContainer) progressBarContainer.style.display = "none";
+          
+          // Reset download button
+          const downloadBtn = document.getElementById("downloadBtn");
+          if (downloadBtn) downloadBtn.textContent = "Download 128×32 Image";
+        }
+
+        initializeEventListeners() {
+          const uploadArea = document.getElementById("uploadArea");
+          const fileInput = document.getElementById("fileInput");
+          const convertBtn = document.getElementById("convertBtn");
+          const downloadBtn = document.getElementById("downloadBtn");
+          const saveToSDBtn = document.getElementById("saveToSDBtn");
+          const qualitySlider = document.getElementById("quality");
+
+          // Upload area events
+          uploadArea.addEventListener("click", () => fileInput.click());
+          uploadArea.addEventListener(
+            "dragover",
+            this.handleDragOver.bind(this)
+          );
+          uploadArea.addEventListener(
+            "dragleave",
+            this.handleDragLeave.bind(this)
+          );
+          uploadArea.addEventListener("drop", this.handleDrop.bind(this));
+
+          // File input
+          fileInput.addEventListener(
+            "change",
+            this.handleFileSelect.bind(this)
+          );
+
+          // Convert button
+          convertBtn.addEventListener("click", this.convertImage.bind(this));
+
+          // Download button
+          downloadBtn.addEventListener("click", this.downloadImage.bind(this));
+
+          saveToSDBtn.addEventListener("click", () => {
+            if (!this.resultDataUrl) {
+              this.showNotification('❌ No image to save.', 'error');
+              return;
+            }
+            const originalName = this.originalFile?.name?.split('.')[0] || 'image';
+            const filename = `${originalName}_128x32.gif`;
+
+            if (this.resultFrames) {
+              // Animated GIF: generate and upload only (no download)
+              this.downloadAnimatedGif(true); // true = upload only, no download
+            } else {
+              // Static GIF blob path
+              const payload = this.resultBlob || this.resultDataUrl;
+              this.saveToSDCard(payload, filename);
+            }
+          });
+
+          // Quality slider
+          qualitySlider.addEventListener("input", (e) => {
+            document.getElementById("qualityValue").textContent =
+              e.target.value;
+          });
+
+          // Resize mode change
+          document
+            .getElementById("resizeMode")
+            .addEventListener("change", this.handleResizeModeChange.bind(this));
+
+          // Animation controls
+          document
+            .getElementById("frameRate")
+            .addEventListener("input", (e) => {
+              document.getElementById("frameRateValue").textContent =
+                e.target.value;
+            });
+
+          document
+            .getElementById("scrollSpeed")
+            .addEventListener("input", (e) => {
+              document.getElementById("scrollSpeedValue").textContent =
+                e.target.value;
+            });
+        }
+
+        handleDragOver(e) {
+          e.preventDefault();
+          document.getElementById("uploadArea").classList.add("dragover");
+        }
+
+        handleDragLeave(e) {
+          e.preventDefault();
+          document.getElementById("uploadArea").classList.remove("dragover");
+        }
+
+        handleDrop(e) {
+          e.preventDefault();
+          document.getElementById("uploadArea").classList.remove("dragover");
+          const files = e.dataTransfer.files;
+          if (files.length > 0) {
+            this.processFile(files[0]);
+          }
+        }
+
+        handleFileSelect(e) {
+          const file = e.target.files[0];
+          if (file) {
+            this.processFile(file);
+          }
+        }
+
+        processFile(file) {
+          if (
+            !file.type.includes("gif") &&
+            !file.type.includes("jpeg") &&
+            !file.type.includes("jpg")
+          ) {
+            alert("Please select a GIF or JPEG file.");
+            return;
+          }
+
+          if (file.size > 10 * 1024 * 1024) {
+            alert("File size must be less than 10MB.");
+            return;
+          }
+
+          // Clean up previous state
+          this.cleanup();
+          this.originalImage = null;
+          
+          // Hide previews
+          document.getElementById("resultPreview").classList.add("hidden");
+          document.getElementById("stats").classList.add("hidden");
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            this.loadImage(e.target.result, file);
+          };
+          reader.readAsDataURL(file);
+        }
+
+        loadImage(src, file) {
+          const img = new Image();
+          img.onload = () => {
+            this.originalImage = img;
+            this.originalFile = file;
+            this.displayOriginalImage(img);
+            this.showControls();
+          };
+          img.src = src;
+        }
+
+        displayOriginalImage(img) {
+          const originalImg = document.getElementById("originalImage");
+          const originalSize = document.getElementById("originalSize");
+          const originalPreview = document.getElementById("originalPreview");
+
+          originalImg.src = img.src;
+          originalSize.textContent = `${img.width} × ${img.height} pixels`;
+          originalPreview.classList.remove("hidden");
+        }
+
+        handleResizeModeChange(e) {
+          const animationControls =
+            document.getElementById("animationControls");
+          if (
+            e.target.value === "scroll-top" ||
+            e.target.value === "scroll-bottom" ||
+            e.target.value === "scroll-top-bounce" ||
+            e.target.value === "scroll-bottom-bounce"
+          ) {
+            animationControls.style.display = "block";
+          } else {
+            animationControls.style.display = "none";
+          }
+        }
+
+        showControls() {
+          document.getElementById("controls").style.display = "block";
+          // Check if default mode needs animation controls
+          this.handleResizeModeChange({ target: { value: "scroll-top" } });
+        }
+
+        convertImage() {
+          if (!this.originalImage) return;
+
+          // Clean up any previous conversion
+          this.cleanup();
+
+          const processing = document.getElementById("processing");
+          const resultPreview = document.getElementById("resultPreview");
+          const stats = document.getElementById("stats");
+
+          // Show processing state
+          processing.classList.remove("hidden");
+          resultPreview.classList.add("hidden");
+          stats.classList.add("hidden");
+
+          // Small delay to show processing animation
+          setTimeout(() => {
+            this.performConversion();
+          }, 100);
+        }
+
+        async performConversion() {
+          const resizeMode = document.getElementById("resizeMode").value;
+          const quality =
+            parseInt(document.getElementById("quality").value) / 100;
+
+          if (resizeMode === "scroll-top" 
+              || resizeMode === "scroll-bottom"
+              || resizeMode === "scroll-top-bounce"
+              || resizeMode === "scroll-bottom-bounce") {
+            this.createScrollingGif(resizeMode);
+          } else {
+            // Set canvas to target size
+            this.canvas.width = 128;
+            this.canvas.height = 32;
+
+            // Clear canvas
+            this.ctx.clearRect(0, 0, 128, 32);
+
+            // Calculate dimensions based on resize mode
+            const { sx, sy, sw, sh, dx, dy, dw, dh } = this.calculateDimensions(
+              this.originalImage.width,
+              this.originalImage.height,
+              resizeMode
+            );
+
+            // Draw image
+            this.ctx.drawImage(
+              this.originalImage,
+              sx,
+              sy,
+              sw,
+              sh,
+              dx,
+              dy,
+              dw,
+              dh
+            );
+
+            // Build a single-frame GIF (was mislabeled JPEG before)
+            try {
+              const gifBlob = await this.buildSingleFrameGif(this.canvas, quality);
+              this.resultBlob = gifBlob;
+              this.resultObjectUrl = URL.createObjectURL(gifBlob);
+              this.resultDataUrl = this.resultObjectUrl;
+              this.displayResult(this.resultObjectUrl);
+              this.updateStats();
+            } catch (err) {
+              console.error("Failed to build single-frame GIF", err);
+              alert("Failed to create GIF. Please try again.");
+            }
+          }
+        }
+
+        buildSingleFrameGif(canvas, quality) {
+          // Use gif.js to create a standards-compliant GIF that AnimatedGIF can parse
+          return new Promise((resolve, reject) => {
+            const gif = new window.GIF({
+              workers: 2,
+              quality: Math.max(1, Math.round((1 - quality) * 30)), // map JPEG slider (0-1) to gif.js quality (1=best)
+              width: 128,
+              height: 32,
+              workerScript: "/js/gif.worker.js",
+              repeat: 0,
+            });
+
+            gif.addFrame(canvas, {
+              copy: true,
+              delay: 500, // 0.5s hold for stills
+            });
+
+            gif.on("finished", (blob) => {
+              if (!blob) {
+                reject(new Error("GIF render returned empty blob"));
+                return;
+              }
+              resolve(blob);
+            });
+
+            gif.on("abort", () => reject(new Error("GIF render aborted")));
+            gif.on("error", (e) => reject(e));
+            gif.render();
+          });
+        }
+
+        async createScrollingGif(scrollDirection) {
+          const frameRate = parseInt(
+            document.getElementById("frameRate").value
+          );
+          const scrollSpeed = parseInt(
+            document.getElementById("scrollSpeed").value
+          );
+
+          // Create a canvas for the full-height image
+          const fullCanvas = document.createElement("canvas");
+          const fullCtx = fullCanvas.getContext("2d");
+
+          // Calculate the height needed to maintain aspect ratio for 128px width
+          const aspectRatio =
+            this.originalImage.height / this.originalImage.width;
+          const scaledHeight = Math.max(128 * aspectRatio, 32);
+
+          fullCanvas.width = 128;
+          fullCanvas.height = scaledHeight;
+
+          // Draw the full image scaled to 128px width
+          fullCtx.drawImage(this.originalImage, 0, 0, 128, scaledHeight);
+
+          // Create frames for animation
+          const frames = [];
+          const frameCanvas = document.createElement("canvas");
+          const frameCtx = frameCanvas.getContext("2d");
+          frameCanvas.width = 128;
+          frameCanvas.height = 32;
+
+          // Calculate total scroll distance and number of frames
+          const scrollDistance = scaledHeight - 32;
+          const pauseFrames = Math.floor(frameRate * 0.5); // Pause duration at endpoints
+          const oneWayFrames = Math.ceil(scrollDistance / scrollSpeed);
+          
+          // Calculate total frames based on scroll pattern
+          let totalFrames = oneWayFrames + pauseFrames;
+          if (scrollDirection.includes('bounce')) {
+            totalFrames = (oneWayFrames * 2) + (pauseFrames * 2); // Double for bounce pattern
+          }
+
+          for (let i = 0; i < totalFrames; i++) {
+            frameCtx.clearRect(0, 0, 128, 32);
+
+            let yPos;
+            const isReturn = i >= (oneWayFrames + pauseFrames); // Are we on the return journey?
+
+            if (isReturn) {
+              // Calculate position for return journey
+              const returnProgress = i - (oneWayFrames + pauseFrames);
+              yPos = Math.max(scrollDistance - (returnProgress * scrollSpeed), 0);
+            } else {
+              // Calculate position for initial journey
+              yPos = Math.min(i * scrollSpeed, scrollDistance);
+            }
+
+            if (scrollDirection === "scroll-top" || scrollDirection === "scroll-top-bounce") {
+              // Scroll from top to bottom
+              frameCtx.drawImage(fullCanvas, 0, yPos, 128, 32, 0, 0, 128, 32);
+            } else {
+              // Scroll from bottom to top
+              frameCtx.drawImage(
+                fullCanvas,
+                0,
+                scaledHeight - 32 - yPos,
+                128,
+                32,
+                0,
+                0,
+                128,
+                32
+              );
+            }
+
+            // Add pause frames at endpoints for bounce patterns
+            if (scrollDirection.includes('bounce')) {
+              if (i === oneWayFrames || i === totalFrames - 1) {
+                // Add identical frames for pause duration
+                const pauseFrame = frameCanvas.toDataURL("image/png");
+                for (let p = 0; p < pauseFrames; p++) {
+                  frames.push(pauseFrame);
+                }
+              }
+            }
+
+            // Convert frame to data URL and store
+            frames.push(frameCanvas.toDataURL("image/png"));
+          }
+
+          // Create animated GIF using a simple approach
+          this.createAnimatedGifFromFrames(frames, frameRate);
+        }
+
+        createAnimatedGifFromFrames(frames, frameRate) {
+          // Clear any existing animation timeouts
+          if (this.animationTimeout) {
+            clearTimeout(this.animationTimeout);
+          }
+
+          let currentFrame = 0;
+          const resultImg = document.getElementById("resultImage");
+          
+          const animate = () => {
+            if (!frames[currentFrame]) {
+              console.log('Animation stopped: frames not available');
+              return;
+            }
+            resultImg.src = frames[currentFrame];
+            currentFrame = (currentFrame + 1) % frames.length;
+            this.animationTimeout = setTimeout(animate, 1000 / frameRate);
+          };
+
+          // Clear the image first
+          resultImg.src = '';
+          
+          // Start new animation
+          animate();
+          this.resultDataUrl = frames[0];
+          this.resultFrames = frames;
+          this.frameRate = frameRate;
+          const downloadBtn = document.getElementById("downloadBtn");
+          downloadBtn.textContent = "Download Animated GIF";
+          // Enable the button in case it was disabled
+          downloadBtn.disabled = false;
+          // Remove previous event listeners to avoid stacking
+          downloadBtn.replaceWith(downloadBtn.cloneNode(true));
+          const newDownloadBtn = document.getElementById("downloadBtn");
+          newDownloadBtn.addEventListener(
+            "click",
+            this.downloadImage.bind(this)
+          );
+          const processing = document.getElementById("processing");
+          const resultPreview = document.getElementById("resultPreview");
+          processing.classList.add("hidden");
+          resultPreview.classList.remove("hidden");
+          this.updateStats();
+        }
+
+        calculateDimensions(originalWidth, originalHeight, mode) {
+          const targetWidth = 128;
+          const targetHeight = 32;
+
+          let sx = 0,
+            sy = 0,
+            sw = originalWidth,
+            sh = originalHeight;
+          let dx = 0,
+            dy = 0,
+            dw = targetWidth,
+            dh = targetHeight;
+
+          switch (mode) {
+            case "cover": {
+              // Smart crop - fill the entire 128x32 area
+              var scale = Math.max(
+                targetWidth / originalWidth,
+                targetHeight / originalHeight
+              );
+              var scaledWidth = originalWidth * scale;
+              var scaledHeight = originalHeight * scale;
+              if (scaledWidth > targetWidth) {
+                var cropWidth = targetWidth / scale;
+                sx = (originalWidth - cropWidth) / 2;
+                sw = cropWidth;
+              }
+              if (scaledHeight > targetHeight) {
+                var cropHeight = targetHeight / scale;
+                sy = (originalHeight - cropHeight) / 2;
+                sh = cropHeight;
+              }
+              break;
+            }
+            case "contain": {
+              // Fit inside - maintain aspect ratio
+              var aspectRatio = originalWidth / originalHeight;
+              var targetAspectRatio = targetWidth / targetHeight;
+              if (aspectRatio > targetAspectRatio) {
+                // Image is wider
+                dh = targetWidth / aspectRatio;
+                dy = (targetHeight - dh) / 2;
+              } else {
+                // Image is taller
+                dw = targetHeight * aspectRatio;
+                dx = (targetWidth - dw) / 2;
+              }
+              break;
+            }
+            case "stretch":
+              // Stretch to fit - use default values
+              break;
+          }
+
+          return { sx, sy, sw, sh, dx, dy, dw, dh };
+        }
+
+        displayResult(dataUrl) {
+          const processing = document.getElementById("processing");
+          const resultPreview = document.getElementById("resultPreview");
+          const resultImg = document.getElementById("resultImage");
+
+          resultImg.src = dataUrl;
+          this.resultDataUrl = dataUrl;
+
+          processing.classList.add("hidden");
+          resultPreview.classList.remove("hidden");
+        }
+
+        updateStats() {
+          const stats = document.getElementById("stats");
+          const originalDimensions =
+            document.getElementById("originalDimensions");
+          const compressionRatio = document.getElementById("compressionRatio");
+          const fileSize = document.getElementById("fileSize");
+
+          const originalPixels =
+            this.originalImage.width * this.originalImage.height;
+          const newPixels = 128 * 32;
+          const ratio = ((1 - newPixels / originalPixels) * 100).toFixed(1);
+
+          originalDimensions.textContent = `Original: ${this.originalImage.width}×${this.originalImage.height} → New: 128×32`;
+
+          if (this.resultFrames) {
+            compressionRatio.textContent = `Animation: ${this.resultFrames.length} frames at ${this.frameRate} FPS`;
+            fileSize.textContent = `Duration: ${(
+              this.resultFrames.length / this.frameRate
+            ).toFixed(2)} seconds`;
+          } else {
+            compressionRatio.textContent = `Size reduction: ${ratio}%`;
+            fileSize.textContent = `Original file: ${(
+              this.originalFile.size / 1024
+            ).toFixed(1)}KB`;
+          }
+
+          stats.classList.remove("hidden");
+        }
+
+        downloadImage() {
+          console.log("downloadImage called");
+          if (!this.resultDataUrl) {
+            console.warn("No resultDataUrl available, aborting download.");
+            return;
+          }
+          if (this.resultFrames) {
+            console.log("Animated GIF download requested.");
+            this.downloadAnimatedGif();
+          } else {
+            console.log("Static image download requested.");
+            if (!this.resultBlob && !this.resultDataUrl) {
+              console.warn("No static GIF available to download.");
+              return;
+            }
+            const link = document.createElement("a");
+            const originalName = this.originalFile?.name?.split('.')[0] || 'image';
+            const filename = `${originalName}_128x32.gif`;
+            link.download = filename;
+            if (this.resultBlob) {
+              const url = this.resultObjectUrl || URL.createObjectURL(this.resultBlob);
+              this.resultObjectUrl = url;
+              link.href = url;
+            } else {
+              link.href = this.resultDataUrl;
+            }
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }
+        }
+
+        downloadAnimatedGif(uploadOnly = false) {
+          console.log("downloadAnimatedGif called");
+          var gif = new window.GIF({
+            workers: 2,
+            quality: 10,
+            width: 128,
+            height: 32,
+            workerScript: "/js/gif.worker.js",
+          });
+          var self = this;
+          // Helper to load a single image
+          function loadImage(url, idx) {
+            return new Promise(function (resolve) {
+              var img = new window.Image();
+              img.onload = function () {
+                resolve(img);
+              };
+              img.onerror = function (e) {
+                console.error("Failed to load frame image", idx, url, e);
+                resolve(null);
+              };
+              img.src = url;
+            });
+          }
+          // Helper to load all images
+          function loadAllImages(urls) {
+            var promises = [];
+            for (var i = 0; i < urls.length; i++) {
+              promises.push(loadImage(urls[i], i));
+            }
+            return Promise.all(promises);
+          }
+          loadAllImages(this.resultFrames).then(function (images) {
+            console.log("All frame images loaded:", images.length, images);
+            // Show progress bar
+            var progressBarContainer = document.getElementById(
+              "gifProgressBarContainer"
+            );
+            var progressBar = document.getElementById("gifProgressBar");
+            var progressText = document.getElementById("gifProgressText");
+            if (progressBarContainer && progressBar && progressText) {
+              progressBarContainer.style.display = "block";
+              progressBar.style.width = "0%";
+              progressText.textContent = "Rendering GIF: 0%";
+            }
+            for (var i = 0; i < images.length; i++) {
+              var img = images[i];
+              if (!img) {
+                console.warn("Frame image", i, "is null or failed to load.");
+                continue;
+              }
+              var tempCanvas = document.createElement("canvas");
+              tempCanvas.width = 128;
+              tempCanvas.height = 32;
+              var tempCtx = tempCanvas.getContext("2d", {
+                willReadFrequently: true,
+              });
+              tempCtx.drawImage(img, 0, 0);
+              gif.addFrame(tempCtx, {
+                copy: true,
+                delay: 1000 / self.frameRate,
+              });
+              // Log after adding each frame
+              console.log("Added frame", i, "to GIF.");
+            }
+            gif.on("finished", function (blob) {
+              if (progressBarContainer)
+                progressBarContainer.style.display = "none";
+              console.log("GIF rendering finished");
+
+              const originalName = self.originalFile?.name?.split('.')[0] || 'image';
+              const filename = originalName + "_128x32.gif";
+              const url = URL.createObjectURL(blob);
+
+              if (uploadOnly) {
+                self.resultBlob = blob;
+                self.resultObjectUrl = url;
+                self.resultDataUrl = url;
+                self.saveToSDCard(blob, filename);
+                return;
+              }
+
+              var link = document.createElement("a");
+              link.download = filename;
+              link.href = url;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              URL.revokeObjectURL(url);
+            });
+            gif.on("progress", function (p) {
+              var percent = Math.round(p * 100);
+              if (progressBar && progressText) {
+                progressBar.style.width = percent + "%";
+                progressText.textContent = "Rendering GIF: " + percent + "%";
+              }
+              console.log(
+                "GIF render progress event:",
+                percent + "%",
+                "raw:",
+                p
+              );
+            });
+            console.log(
+              "Starting GIF render with",
+              gif.frames.length,
+              "frames."
+            );
+            gif.render();
+          });
+        }
+
+        async saveToSDCard(data, filename) {
+          try {
+            console.log("Saving to SD card:", filename);
+            
+            // Convert data URL to blob if needed
+            let blob;
+            if (typeof data === 'string') {
+              // It's a data URL
+              const response = await fetch(data);
+              blob = await response.blob();
+            } else {
+              // It's already a blob
+              blob = data;
+            }
+            
+            // Create form data for upload
+            const uploadUrl = '/api/upload';
+            const formData = new FormData();
+            formData.append('file', blob, filename);
+            formData.append('filename', filename);
+            
+            const response = await fetch(uploadUrl, {
+              method: 'POST',
+              body: formData
+            });
+            
+            console.log('Upload response status:', response.status, response.statusText);
+            
+            if (response.ok) {
+              // Try to parse JSON response, but handle cases where it might not be JSON
+              let result = null;
+              const responseText = await response.text();
+              console.log('Response text:', responseText);
+              
+              if (responseText.trim()) {
+                try {
+                  result = JSON.parse(responseText);
+                } catch (parseError) {
+                  console.warn('Response is not valid JSON:', parseError);
+                  result = { status: 'success', message: 'Upload completed' };
+                }
+              } else {
+                result = { status: 'success', message: 'Upload completed' };
+              }
+              
+              console.log('Successfully saved to SD card:', result);
+              this.showNotification('✅ Saved to SD card successfully!', 'success');
+            } else {
+              // Handle error responses
+              let errorMessage = 'Upload failed';
+              try {
+                const responseText = await response.text();
+                console.log('Error response text:', responseText);
+                
+                if (responseText.trim()) {
+                  const error = JSON.parse(responseText);
+                  errorMessage = error.message || errorMessage;
+                }
+              } catch (parseError) {
+                console.warn('Error response is not valid JSON:', parseError);
+                errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+              }
+              
+              console.error('Failed to save to SD card:', errorMessage);
+              this.showNotification('❌ Failed to save to SD card: ' + errorMessage, 'error');
+            }
+          } catch (error) {
+            console.error('Error saving to SD card:', error);
+            this.showNotification('❌ Error saving to SD card: ' + error.message, 'error');
+          }
+        }
+
+        showNotification(message, type) {
+          // Create notification element
+          const notification = document.createElement('div');
+          notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#10b981' : '#ef4444'};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+          `;
+          notification.textContent = message;
+          
+          document.body.appendChild(notification);
+          
+          // Remove notification after 3 seconds
+          setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+              if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+              }
+            }, 300);
+          }, 3000);
+        }
+      }
+
+      // Initialize the editor when the page loads
+      document.addEventListener("DOMContentLoaded", () => {
+        new GifTo128x32Editor();
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Management - Pixel Matrix FX</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/controls.css">
+    <link rel="stylesheet" href="css/filemgmt.css">
+    <script src="js/app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-title-bar" style="display: flex; justify-content: space-between; align-items: center;">
+                <h1 class="title" style="margin: 0;">
+                    <span class="pixel-icon">📁</span>
+                    File Management
+                </h1>
+                <div class="status-bar">
+                    <div class="status-item" style="text-align: right;">
+                        <span class="status-label">Status:</span>
+                        <span class="status-value connected" id="connectionStatus">Connected</span>
+                    </div>
+                </div>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">Device Info</a></li>
+                    <li><a href="converter.html">Image Converter</a></li>
+                    <li><a href="filemgmt.html">File Management</a></li>
+                    <li><a href="api.html">API Docs</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main class="main-content">
+
+            
+            <div class="card">
+                <h2>File Manager</h2>
+                
+                <div class="alert alert-warning" style="margin-bottom: 1em; color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 4px;">
+                    <strong style="font-size: 0.95em;">Note:</strong> <span style="font-size: 0.95em;">GIF playback should be paused when accessing this page to prevent SD card conflicts and possible device crashes.</span>
+                </div>
+
+                <!-- File Upload Area -->
+                <div class="file-upload-area" id="uploadArea">
+                    <div class="upload-icon">📤</div>
+                    <div class="upload-text">Drag & drop GIF files here or click to browse</div>
+                    <div class="upload-hint">Only .gif files are supported</div>
+                    <input type="file" id="fileInput" accept=".gif" multiple style="display: none;">
+                </div>
+
+                <!-- Toolbar -->
+                <div class="toolbar">
+                    <div class="toolbar-group">
+                        <button class="btn btn-primary" onclick="showCreateFolderModal()">
+                            <span class="btn-icon">📁</span>
+                            New Folder
+                        </button>
+                        <button class="btn btn-secondary" onclick="refreshFiles()">
+                            <span class="btn-icon">🔄</span>
+                            Refresh
+                        </button>
+                    </div>
+                    <div class="toolbar-group">
+                        <button class="btn btn-warning" onclick="goToParentDirectory()" id="upBtn"
+                            style="display: none;">
+                            <span class="btn-icon">⬆️</span>
+                            Up
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Breadcrumb -->
+                <nav class="breadcrumb" id="breadcrumb">
+                    <a href="#" class="breadcrumb-item" onclick="navigateToPath('/')">Root</a>
+                </nav>
+
+                <!-- File Stats -->
+                <div class="file-stats" id="fileStats">
+                    <span>Total Files: <strong id="fileCount">0</strong></span>
+                    <span>Total Folders: <strong id="folderCount">0</strong></span>
+                </div>
+
+                <!-- File Table -->
+                <table class="file-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Size</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fileTableBody">
+                        <!-- Files will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2026 Pixel Matrix FX</p>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div>Processing...</div>
+        </div>
+    </div>
+
+    <!-- Create Folder Modal -->
+    <div class="modal" id="createFolderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Create New Folder</h3>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="folderNameInput">Folder Name:</label>
+                    <input type="text" id="folderNameInput" class="form-input" placeholder="Enter folder name">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="hideCreateFolderModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="createFolder()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rename Modal -->
+    <div class="modal" id="renameModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Rename Item</h3>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="renameInput">New Name:</label>
+                    <input type="text" id="renameInput" class="form-input" placeholder="Enter new name">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="hideRenameModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmRename()">Rename</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Move Modal -->
+    <div class="modal" id="moveModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Move Item</h3>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="moveFolderSelect">Select Destination Folder:</label>
+                    <select id="moveFolderSelect" class="form-input">
+                        <option value="/">/</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="hideMoveModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmMove()">Move</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentPath = '/';
+        let currentRenameItem = null;
+        let currentMoveItem = null;
+        let allFolders = ['/'];  // Store all available folders
+        
+        // Use the environment detection
+        console.log('Base URL for file management:', window.baseUrl);
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', async function () {
+            setupEventListeners();
+            fetchFiles();
+        });
+
+        function setupEventListeners() {
+            // File upload drag and drop
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', handleDragOver);
+            uploadArea.addEventListener('dragleave', handleDragLeave);
+            uploadArea.addEventListener('drop', handleDrop);
+            fileInput.addEventListener('change', handleFileSelect);
+
+            // Modal close on backdrop click
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', function (e) {
+                    if (e.target === this) {
+                        hideAllModals();
+                    }
+                });
+            });
+
+            // Enter key handlers for modals
+            document.getElementById('folderNameInput').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') createFolder();
+            });
+            document.getElementById('renameInput').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') confirmRename();
+            });
+            // Add change event listener for the move folder select
+            document.getElementById('moveFolderSelect').addEventListener('change', function() {
+                // Optional: auto-confirm move on selection change
+                // confirmMove();
+            });
+        }
+
+        // File upload handlers
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files).filter(file => file.name.toLowerCase().endsWith('.gif'));
+            if (files.length > 0) {
+                uploadFiles(files);
+            } else {
+                showMessage('Only GIF files are supported', 'error');
+            }
+        }
+
+        function handleFileSelect(e) {
+            const files = Array.from(e.target.files);
+            uploadFiles(files);
+        }
+
+        async function uploadFiles(files) {
+            showLoading(true);
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (const file of files) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                // Add the folder parameter to the URL
+                const uploadUrl = `${window.baseUrl}/api/upload?folder=${encodeURIComponent(currentPath)}`;
+
+                try {
+                    const response = await fetch(uploadUrl, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        successCount++;
+                    } else {
+                        errorCount++;
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    errorCount++;
+                }
+            }
+
+            showLoading(false);
+
+            if (successCount > 0) {
+                showMessage(`${successCount} file(s) uploaded successfully.`, 'success');
+                refreshFiles();
+            }
+
+            if (errorCount > 0) {
+                showMessage(`${errorCount} file(s) failed to upload.`, 'error');
+            }
+
+            // Clear the file input
+            document.getElementById('fileInput').value = '';
+        }
+
+        // File operations
+        async function getAllFolders() {
+            try {
+                const response = await fetch(`${window.baseUrl}/api/files/folders`);
+                const data = await response.json();
+                return data.folders || [];
+            } catch (error) {
+                console.error('Error fetching folders:', error);
+                return [];
+            }
+        }
+
+        async function fetchFiles(path = currentPath) {
+            showLoading(true);
+            try {
+                await stopGifAndWait();
+                const response = await fetch(`${window.baseUrl}/api/files?path=${encodeURIComponent(path)}`);
+                const files = await response.json();
+
+                if (Array.isArray(files)) {
+                    currentPath = path;
+                    renderFiles(files);
+                    updateBreadcrumb(path);
+                    updateFileStats(files);
+                } else {
+                    showMessage('Error loading files: ' + (files.message || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                showMessage('Failed to load files: ' + error.message, 'error');
+                updateConnectionStatus(false);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function renderFiles(files) {
+            const tbody = document.getElementById('fileTableBody');
+            tbody.innerHTML = '';
+
+            files.forEach(file => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <div class="file-name ${file.type === 'folder' ? 'clickable-folder' : ''}" ${file.type === 'folder' ? `onclick=\"navigateToFolder('${file.name}')\"` : ''}>
+                            <span class="file-icon ${file.type === 'folder' ? 'folder-icon' : (file.name.toLowerCase().endsWith('.gif') ? 'gif' : 'default')}">
+                                ${file.type === 'folder' ? '📁' : (file.name.toLowerCase().endsWith('.gif') ? '🎬' : '📄')}
+                            </span>
+                            ${file.name}
+                        </div>
+                    </td>
+                    <td>${file.type === 'folder' ? 'Folder' : 'File'}</td>
+                    <td>${file.size ? formatFileSize(file.size) : '-'}</td>
+                    <td class="file-actions">
+                        <button class="btn btn-secondary" onclick="showRenameModal('${currentPath}${file.name}', '${file.name}')">Rename</button>
+                        <button class="btn btn-danger" onclick="deleteItem('${currentPath}${file.name}', '${file.name}')">Delete</button>
+                        ${file.type === 'file' ?
+                        `<button class="btn btn-warning" onclick="showMoveModal('${currentPath}${file.name}')">Move</button>` :
+                        ''
+                    }
+                    </td>
+                `;
+                // Add click handler for GIF files to display on matrix
+                if (file.type === 'file' && file.name.toLowerCase().endsWith('.gif')) {
+                    tr.addEventListener('click', async (e) => {
+                        // Prevent triggering when clicking action buttons
+                        if (e.target.closest('.file-actions')) return;
+                        const filePath = currentPath + file.name;
+                        showLoading(true);
+                        try {
+                            const response = await fetch(window.baseUrl + '/api/gif/show?path=' + encodeURIComponent(filePath), { method: 'GET' });
+                            const result = await response.json();
+                            if (result.status === 'success') {
+                                showMessage('Displayed on matrix: ' + file.name, 'success');
+                            } else {
+                                showMessage('Error: ' + (result.message || 'Failed to display GIF'), 'error');
+                            }
+                        } catch (err) {
+                            showMessage('Request failed: ' + err.message, 'error');
+                        } finally {
+                            showLoading(false);
+                        }
+                    });
+                }
+                tbody.appendChild(tr);
+            });
+
+            // Show/hide up button
+            const upBtn = document.getElementById('upBtn');
+            upBtn.style.display = currentPath === '/' ? 'none' : 'inline-flex';
+        }
+
+        function updateBreadcrumb(path) {
+            const breadcrumb = document.getElementById('breadcrumb');
+            const parts = path.split('/').filter(part => part.length > 0);
+
+            let html = '<a href="#" class="breadcrumb-item" onclick="navigateToPath(\'/\')">Root</a>';
+
+            let currentPath = '';
+            parts.forEach((part, index) => {
+                currentPath += '/' + part;
+                html += ' <span class="breadcrumb-separator">/</span> ';
+                html += `<a href="#" class="breadcrumb-item" onclick="navigateToPath('${currentPath}/')">${part}</a>`;
+            });
+
+            breadcrumb.innerHTML = html;
+        }
+
+        function updateFileStats(files) {
+            const fileCount = files.filter(f => f.type === 'file').length;
+            const folderCount = files.filter(f => f.type === 'folder').length;
+
+            document.getElementById('fileCount').textContent = fileCount;
+            document.getElementById('folderCount').textContent = folderCount;
+        }
+
+        function navigateToFolder(folderName) {
+            const newPath = currentPath.endsWith('/') ? currentPath + folderName + '/' : currentPath + '/' + folderName + '/';
+            fetchFiles(newPath);
+        }
+
+        function navigateToPath(path) {
+            fetchFiles(path);
+        }
+
+        function goToParentDirectory() {
+            if (currentPath === '/') return;
+
+            const parts = currentPath.split('/').filter(part => part.length > 0);
+            parts.pop();
+            const parentPath = parts.length > 0 ? '/' + parts.join('/') + '/' : '/';
+            fetchFiles(parentPath);
+        }
+
+        function refreshFiles() {
+            fetchFiles(currentPath);
+        }
+
+        // Modal functions
+        function showCreateFolderModal() {
+            document.getElementById('createFolderModal').style.display = 'block';
+            document.getElementById('folderNameInput').value = '';
+            document.getElementById('folderNameInput').focus();
+        }
+
+        function hideCreateFolderModal() {
+            document.getElementById('createFolderModal').style.display = 'none';
+        }
+
+        function showRenameModal(path, currentName) {
+            currentRenameItem = path;
+            document.getElementById('renameModal').style.display = 'block';
+            // Remove .gif extension for display if present
+            let displayName = currentName;
+            if (displayName.toLowerCase().endsWith('.gif')) {
+                displayName = displayName.slice(0, -4);
+            }
+            document.getElementById('renameInput').value = displayName;
+            document.getElementById('renameInput').focus();
+            document.getElementById('renameInput').select();
+        }
+
+        function hideRenameModal() {
+            document.getElementById('renameModal').style.display = 'none';
+            currentRenameItem = null;
+        }
+
+        async function showMoveModal(path) {
+            showLoading(true);
+            try {
+                currentMoveItem = path;
+                // Get all available folders
+                const folders = await getAllFolders();
+                // Sort folders for better display
+                folders.sort();
+                
+                // Update the select element
+                const select = document.getElementById('moveFolderSelect');
+                select.innerHTML = folders.map(folder => 
+                    `<option value="${folder}"${folder === currentPath ? ' selected' : ''}>${folder}</option>`
+                ).join('');
+                
+                document.getElementById('moveModal').style.display = 'block';
+                // Focus the select element
+                select.focus();
+            } catch (error) {
+                console.error('Error preparing move modal:', error);
+                showMessage('Error loading folders', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function hideMoveModal() {
+            document.getElementById('moveModal').style.display = 'none';
+            currentMoveItem = null;
+        }
+
+        function hideAllModals() {
+            hideCreateFolderModal();
+            hideRenameModal();
+            hideMoveModal();
+        }
+
+        // CRUD operations
+        async function createFolder() {
+            const name = document.getElementById('folderNameInput').value.trim();
+            if (!name) {
+                showMessage('Please enter a folder name', 'error');
+                return;
+            }
+
+            showLoading(true);
+            await stopGifAndWait();
+            try {
+                const response = await fetch(`${window.baseUrl}/api/files/create-folder?name=${encodeURIComponent(name)}&path=${encodeURIComponent(currentPath)}`, {
+                    method: 'GET'
+                });
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showMessage('Folder created successfully', 'success');
+                    hideCreateFolderModal();
+                    fetchFiles();
+                } else {
+                    showMessage('Error: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showMessage('Request failed: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function confirmRename() {
+            console.log('=== FRONTEND RENAME REQUEST ===');
+            console.log('Renaming item:', currentRenameItem);
+            console.log('Base URL:', window.baseUrl);
+            console.log('Running on ESP:', window.isRunningOnESP);
+
+            await stopGifAndWait();
+            let newName = document.getElementById('renameInput').value.trim();
+            if (!newName || !currentRenameItem) {
+                showMessage('Please enter a valid name', 'error');
+                return;
+            }
+            // If original was .gif and user didn't add it, add it back
+            const oldName = currentRenameItem.split('/').pop();
+            if (oldName.toLowerCase().endsWith('.gif') && !newName.toLowerCase().endsWith('.gif')) {
+                newName += '.gif';
+            }
+
+            showLoading(true);
+            try {
+                const response = await fetch(`${window.baseUrl}/api/files/rename?path=${encodeURIComponent(currentRenameItem)}&newName=${encodeURIComponent(newName)}`, {
+                    method: 'GET'
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
+                const result = await response.json();
+                console.log('Response JSON:', result);
+
+                if (result.status === 'success') {
+                    showMessage('Item renamed successfully', 'success');
+                    hideRenameModal();
+                    fetchFiles();
+                } else {
+                    showMessage('Error: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showMessage('Request failed: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function confirmMove() {
+            const targetFolder = document.getElementById('moveFolderSelect').value;
+            if (!targetFolder || !currentMoveItem) {
+                showMessage('Please select a destination folder', 'error');
+                return;
+            }
+
+            // Get the filename from the current path
+            const fileName = currentMoveItem.split('/').pop();
+            // Construct the new path
+            const newPath = targetFolder === '/' ? '/' + fileName : targetFolder + '/' + fileName;
+
+            showLoading(true);
+            await stopGifAndWait();
+            try {
+                const response = await fetch(`${window.baseUrl}/api/files/move?path=${encodeURIComponent(currentMoveItem)}&newPath=${encodeURIComponent(newPath)}`, {
+                    method: 'GET'
+                });
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showMessage('Item moved successfully', 'success');
+                    hideMoveModal();
+                    fetchFiles();
+                } else {
+                    showMessage('Error: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showMessage('Request failed: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function deleteItem(path, name) {
+            console.log('=== FRONTEND DELETE REQUEST ===');
+            console.log('Deleting item:', name);
+            console.log('Path:', path);
+            console.log('Base URL:', window.baseUrl);
+            console.log('Running on ESP:', window.isRunningOnESP);
+
+            showLoading(true);
+            await stopGifAndWait();
+            try {
+                const url = `${window.baseUrl}/api/files/delete?path=${encodeURIComponent(path)}`;
+                console.log('Request URL:', url);
+                
+                const response = await fetch(url, {
+                    method: 'GET'
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+
+                const result = await response.json();
+                console.log('Response JSON:', result);
+                
+                if (result.status === 'success') {
+                    showMessage('Item deleted successfully', 'success');
+                    fetchFiles();
+                } else {
+                    showMessage('Error: ' + result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Delete request error:', error);
+                showMessage('Request failed: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+                console.log('=== FRONTEND DELETE REQUEST COMPLETE ===');
+            }
+        }
+
+        // Utility functions
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Helper function to stop GIF and wait
+        async function stopGifAndWait() {
+            try {
+                await stopGif();
+                // Wait for 2 seconds to ensure SD card operations are complete
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            } catch (e) {
+                // Wait even if there was an error, just to be safe
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                console.warn('Failed to stop GIF playback:', e);
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        }
+
+        function showMessage(message, type) {
+            const statusElement = document.getElementById('connectionStatus');
+            const originalText = statusElement.textContent;
+            const originalClass = statusElement.className;
+
+            statusElement.textContent = message;
+            statusElement.className = 'status-value ' + type;
+
+            setTimeout(() => {
+                statusElement.textContent = originalText;
+                statusElement.className = originalClass;
+            }, 3000);
+        }
+
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('connectionStatus');
+            if (connected) {
+                statusElement.textContent = 'Connected';
+                statusElement.className = 'status-value connected';
+            } else {
+                statusElement.textContent = 'Disconnected';
+                statusElement.className = 'status-value error';
+            }
+        }
+    </script>
+</body>
+
+</html>

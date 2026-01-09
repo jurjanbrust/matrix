@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pixel Matrix FX Control</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/controls.css" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <script src="js/app.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <div
+          class="header-title-bar"
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <h1 class="title" style="margin: 0">
+            <span class="pixel-icon">▦▦</span>
+            Pixel Matrix FX Control
+          </h1>
+          <div class="status-bar">
+            <div class="status-item" style="text-align: right">
+              <span class="status-label">Status:</span>
+              <span class="status-value connected">Connected</span>
+            </div>
+          </div>
+        </div>
+        <nav class="main-nav">
+          <ul>
+            <li><a href="index.html">Device Info</a></li>
+            <li><a href="converter.html">Image Converter</a></li>
+            <li><a href="filemgmt.html">File Management</a></li>
+            <li><a href="api.html">API Docs</a></li>
+          </ul>
+        </nav>
+      </header>
+
+      <main class="main-content">
+        <div class="card info-card" id="device-info">
+          <h2>Device Information</h2>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Firmware Version:</span>
+              <span class="info-value" id="firmware-version">—</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">SSID:</span>
+              <span class="info-value" id="ssid">%SSID%</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">IP Address:</span>
+              <span class="info-value" id="ip">%IP%</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Hostname:</span>
+              <span class="info-value" id="hostname">%HOSTNAME%</span>
+            </div>
+          <div class="info-item">
+            <span class="info-label">Current GIF:</span>
+            <span class="info-value" id="current-gif">%CURRENT_GIF%</span>
+          </div>
+            <div class="info-item connection-settings">
+              <span class="info-label">Matrix API Base URL:</span>
+              <div class="connection-input-row">
+                <input
+                  type="text"
+                  id="base-url-input"
+                  placeholder="http://192.168.1.50"
+                />
+                <button class="btn btn-secondary" onclick="saveBaseUrl()">
+                  Save
+                </button>
+              </div>
+              <p class="connection-helper" id="base-url-helper">
+                Enter the device address, for example http://192.168.1.50.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card control-card" id="brightness-control">
+          <h2>Brightness Control</h2>
+          <div class="brightness-control">
+            <div class="slider-container">
+              <label for="brightnessSlider" class="slider-label">
+                Brightness Level: <span id="sliderValue">%BRIGHTNESS%</span>
+              </label>
+              <input
+                type="range"
+                id="brightnessSlider"
+                class="brightness-slider"
+                min="1"
+                max="255"
+                value="%BRIGHTNESS%"
+                oninput="updateBrightnessDisplay(this.value)"
+                onchange="setBrightness(this.value)"
+              />
+              <div class="slider-track"></div>
+            </div>
+            <div class="quick-brightness-buttons">
+              <button class="btn btn-secondary" onclick="setBrightness(10)">
+                Low
+              </button>
+              <button class="btn btn-secondary" onclick="setBrightness(20)">
+                Medium
+              </button>
+              <button class="btn btn-secondary" onclick="setBrightness(50)">
+                High
+              </button>
+              <button class="btn btn-secondary" onclick="setBrightness(100)">
+                Max
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card control-card" id="gif-playback-control">
+          <h2>Gif Playback Control</h2>
+          <div class="control-buttons gif-buttons">
+            <button
+              class="btn btn-primary"
+              id="play-sequential-btn"
+              onclick="playSequentialMode()"
+              disabled
+            >
+              <span class="btn-icon">▶️</span>
+              Sequential
+            </button>
+            <button
+              class="btn btn-accent"
+              id="play-random-btn"
+              onclick="playRandomMode()"
+              disabled
+            >
+              <span class="btn-icon">🔀</span>
+              Random
+            </button>
+            <button
+              class="btn btn-secondary"
+              id="play-folder-btn"
+              onclick="playRandomByFolderMode()"
+              disabled
+            >
+              <span class="btn-icon">🗂️</span>
+              By Foldername
+            </button>
+          </div>
+        </div>
+
+        <div class="card control-card" id="mode-control">
+          <h2>Mode Control</h2>
+          <div class="control-buttons mode-buttons">
+            <button
+              class="btn btn-primary"
+              id="play-btn"
+              onclick="playGif()"
+              disabled
+            >
+              <span class="btn-icon">▶️</span>
+              Gifs
+            </button>
+            <button
+              class="btn btn-warning"
+              id="test-btn"
+              onclick="showTestPattern()"
+              disabled
+            >
+              <span class="btn-icon">🧪</span>
+              Test
+            </button>            <button
+              class="btn btn-secondary"
+              id="clock-btn"
+              onclick="showClock()"
+              disabled
+            >
+              <span class="btn-icon">🕒</span>
+              Clock
+            </button>
+            <button
+              class="btn btn-accent"
+              id="life-btn"
+              onclick="showGameOfLife()"
+              disabled
+            >
+              <span class="btn-icon">🧬</span>
+              Game of Life
+            </button>
+            <button
+              class="btn btn-accent"
+              id="spectrum-btn"
+              onclick="showSpectrumVisualizer()"
+              disabled
+            >
+              <span class="btn-icon">🎚️</span>
+              Spectrum
+            </button>
+            <button
+              class="btn btn-accent"
+              id="marquee-btn"
+              onclick="showMarquee()"
+              disabled
+            >
+              <span class="btn-icon">📰</span>
+              Marquee
+            </button>
+            <button
+              class="btn btn-accent"
+              id="stop-btn"
+              onclick="stopGif()"
+              disabled
+            >
+              <span class="btn-icon">⏹️</span>
+              Stop
+            </button>
+          </div>
+        </div>
+
+        <div class="card control-card" id="marquee-control">
+          <h2>Marquee Text</h2>
+          <textarea
+            id="marquee-text-input"
+            style="width: 100%; box-sizing: border-box;"
+            rows="3"
+            maxlength="2048"
+            placeholder="Enter your scrolling message here"
+          ></textarea>
+          <div class="helper-text" id="marquee-char-count">0 / 2048 characters</div>
+          <div class="marquee-settings" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; align-items: center; margin-top: 6px;">
+            <label style="display:flex; flex-direction:column; gap:4px; font-size:0.95em;">
+              <span>Text Size <span id="marquee-size-value">1</span></span>
+              <input type="range" id="marquee-size" min="1" max="4" value="1" style="margin:0;" />
+            </label>
+              <label style="display:flex; flex-direction:column; gap:4px; font-size:0.95em;">
+                 <span>Scroll Speed (right = faster: <span id="marquee-speed-value">60</span> ms/step)</span>
+                <input type="range" id="marquee-speed" min="10" max="200" value="150" style="margin:0;" />
+            </label>
+            <label style="display:flex; flex-direction:row; gap:8px; align-items:center; font-size:0.95em; margin-bottom:4px;">
+              <span>Text Color</span>
+              <input type="color" id="marquee-color" value="#ffffff" style="flex:0 0 auto;" />
+            </label>
+          </div>
+          <div class="control-buttons">
+            <button class="btn btn-primary" id="marquee-text-submit" onclick="submitMarqueeText()">
+              <span class="btn-icon">⬆️</span>
+              Send Text
+            </button>
+            <button class="btn btn-secondary" id="marquee-settings-submit" onclick="submitMarqueeSettings()">
+              <span class="btn-icon">⚙️</span>
+              Apply Marquee Settings
+            </button>
+          </div>
+        </div>
+
+        <div class="card control-card" id="device-control">
+          <h2>Device Control</h2>
+          <div class="control-buttons">
+            <button class="btn btn-warning" onclick="resetWiFi()">
+              <span class="btn-icon">🔄</span>
+              Reset WiFi Credentials
+            </button>
+            <button class="btn btn-danger" onclick="restartDevice()">
+              <span class="btn-icon">🔌</span>
+              Restart Device
+            </button>
+          </div>
+        </div>
+
+        <div class="card control-card" id="timezone-control-card">
+          <h2>Timezone Settings</h2>
+          <div class="timezone-control">
+            <label for="timezone-select" class="timezone-label">Timezone</label>
+            <select
+              id="timezone-select"
+              data-current="%TIMEZONE%"
+              onchange="onTimezoneSelectChange(this.value)"
+            >
+              <option value="UTC0">UTC (no DST)</option>
+              <option value="CET-1CEST,M3.5.0/02,M10.5.0/03">
+                Central Europe (CET/CEST)
+              </option>
+              <option value="GMT0BST,M3.5.0/01,M10.5.0/02">
+                United Kingdom (GMT/BST)
+              </option>
+              <option value="EST5EDT,M3.2.0/02,M11.1.0/02">
+                Eastern US (EST/EDT)
+              </option>
+              <option value="PST8PDT,M3.2.0/02,M11.1.0/02">
+                Pacific US (PST/PDT)
+              </option>
+              <option value="custom">Custom...</option>
+            </select>
+            <label for="timezone-input" class="timezone-input-label"
+              >Custom TZ String</label
+            >
+            <input
+              type="text"
+              id="timezone-input"
+              placeholder="e.g. CET-1CEST,M3.5.0/02,M10.5.0/03"
+              value="%TIMEZONE%"
+            />
+            <button
+              class="btn btn-primary"
+              id="timezone-save-btn"
+              onclick="setTimezoneFromInput()"
+            >
+              Save Timezone
+            </button>
+            <p class="helper-text">
+              Use POSIX TZ format. Selecting a preset fills the field
+              automatically.
+            </p>
+          </div>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <p>&copy; 2026 Pixel Matrix FX</p>
+      </footer>
+    </div>
+  </body>
+</html>

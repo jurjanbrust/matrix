@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Matrix FX Control</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/controls.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-title-bar" style="display: flex; justify-content: space-between; align-items: center;">
+                <h1 class="title" style="margin: 0;">
+                    <span class="pixel-icon">🌐</span>
+                    Pixel Matrix FX Control
+                </h1>
+                <div class="status-bar">
+                    <div class="status-item" style="text-align: right;">
+                        <span class="status-label">Status:</span>
+                        <span class="status-value connected">Connected</span>
+                    </div>
+                </div>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">Device Info</a></li>
+                    <li><a href="converter.html">Image Converter</a></li>
+                    <li><a href="filemgmt.html">File Management</a></li>
+                    <li><a href="api.html">API Docs</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main class="main-content">
+            <div class="card api-card" id="api-endpoints">
+                <h2>Device Management APIs</h2>
+                <div class="api-list">
+                    <div class="api-item">
+                        <span class="api-method get">GET</span>
+                        <a href="/api/status" class="api-endpoint">/api/status</a>
+                        <span class="api-description">Get device status including GIF playback state</span>
+                    </div>
+                    <div class="api-item">
+                        <span class="api-method get">GET</span>
+                        <a href="/api/brightness/increase" class="api-endpoint">/api/brightness/increase</a>
+                        <span class="api-description">Increase brightness by 25</span>
+                    </div>
+                    <div class="api-item">
+                        <span class="api-method get">GET</span>
+                        <a href="/api/brightness/decrease" class="api-endpoint">/api/brightness/decrease</a>
+                        <span class="api-description">Decrease brightness by 25</span>
+                    </div>
+                    <div class="api-item">
+                        <span class="api-method get">GET</span>
+                        <a href="/api/brightness/set?value=100" class="api-endpoint">/api/brightness/set?value=X</a>
+                        <span class="api-description">Set brightness (1-255)</span>
+                    </div>
+                    <div class="api-item">
+                        <span class="api-method get">GET</span>
+                        <a href="/api/wifi/reset" class="api-endpoint">/api/wifi/reset</a>
+                        <span class="api-description">Reset WiFi credentials</span>
+                    </div>
+                    <div class="api-item">
+                        <span class="api-method get">GET</span>
+                        <a href="/api/restart" class="api-endpoint">/api/restart</a>
+                        <span class="api-description">Restart device</span>
+                    </div>
+                </div>
+                <h2 style="margin-top:2em;">GIF Playback Control APIs</h2>
+                <div class="api-list">
+                    <div class="api-item">
+                        <span class="api-method get">GET</span>
+                        <a href="/api/gif/play" class="api-endpoint">/api/gif/play</a>
+                        <span class="api-description">Start/resume GIF playback</span>
+                    </div>
+                    <div class="api-item">
+                        <span class="api-method get">GET</span>
+                        <a href="/api/gif/stop" class="api-endpoint">/api/gif/stop</a>
+                        <span class="api-description">Stop GIF playback</span>
+                    </div>
+                    <div class="api-item">
+                        <span class="api-method get">GET</span>
+                        <a href="/api/gif/show?path=/gifs/yourfile.gif" class="api-endpoint">/api/gif/show?path=/gifs/yourfile.gif</a>
+                        <span class="api-description">Display a specific GIF file on the matrix and stop batch playback.<br>Parameters: <code>path</code> (required, absolute path to .gif file)</span>
+                    </div>
+                        <div class="api-item">
+                            <span class="api-method get">GET</span>
+                            <a href="/api/test/show" class="api-endpoint">/api/test/show</a>
+                            <span class="api-description">Enable the solid color test pattern (cycles through primary colors).</span>
+                        </div>
+                </div>
+                <h2 style="margin-top:2em;">Marquee Control APIs</h2>
+                <div class="api-list">
+                    <div class="api-item">
+                        <span class="api-method get">GET</span>
+                        <span class="api-endpoint">/api/marquee/text?text=Your%20message</span>
+                        <span class="api-description">Set marquee text via query string (max 2048 chars). Returns JSON with final length and truncation status.</span>
+                    </div>
+                    <div class="api-item">
+                        <span class="api-method get">GET</span>
+                        <a href="/api/marquee/text" class="api-endpoint">/api/marquee/text</a>
+                        <span class="api-description">Retrieve the currently stored marquee text and length.</span>
+                    </div>
+                    <div class="api-item">
+                        <span class="api-method get">GET</span>
+                        <a href="/api/marquee/show" class="api-endpoint">/api/marquee/show</a>
+                        <span class="api-description">Switch playback to marquee mode using the stored message.</span>
+                    </div>
+                </div>
+                <h2 style="margin-top:2em;">File Management APIs</h2>
+                <div class="api-list">
+                    <div class="api-item">
+                        <span class="api-method get">GET</span>
+                        <a href="/api/files?path=/folder/" class="api-endpoint">/api/files?path=/folder/</a>
+                        <span class="api-description">List files and folders in a directory (default: root)</span>
+                    </div>
+                    <div class="api-item">
+                        <span class="api-method get">GET</span>
+                        <span class="api-endpoint">/api/files/delete?path=/path/to/file</span>
+                        <span class="api-description">Delete a file or folder. <br>Parameters: <code>path</code></span>
+                    </div>
+                    <div class="api-item">
+                        <span class="api-method get">GET</span>
+                        <span class="api-endpoint">/api/files/rename?path=/path/to/file&newName=newname</span>
+                        <span class="api-description">Rename a file or folder. <br>Parameters: <code>path</code>, <code>newName</code></span>
+                    </div>
+                    <div class="api-item">
+                        <span class="api-method get">GET</span>
+                        <span class="api-endpoint">/api/files/move?path=/old/path/file&newPath=/new/path/file</span>
+                        <span class="api-description">Move a file or folder. <br>Parameters: <code>path</code>, <code>newPath</code></span>
+                    </div>
+                    <div class="api-item">
+                        <span class="api-method get">GET</span>
+                        <span class="api-endpoint">/api/files/create-folder?name=foldername&path=/current/path/</span>
+                        <span class="api-description">Create a new folder in the current directory. <br>Parameters: <code>name</code>, <code>path</code> (optional, defaults to root)</span>
+                    </div>
+                    <div class="api-item">
+                        <span class="api-method post">POST</span>
+                        <span class="api-endpoint">/api/upload</span>
+                        <span class="api-description">Upload a GIF file to the /gifs folder</span>
+                    </div>
+                    <div class="api-item">
+                        <span class="api-method get">GET</span>
+                        <a href="/api/files/folders" class="api-endpoint">/api/files/folders</a>
+                        <span class="api-description">Get a recursive list of all folders in the filesystem. Returns JSON: <code>{"folders": ["/", "/folder1", "/folder1/subfolder", ...]}</code></span>
+                    </div>
+                </div>
+                <h2 style="margin-top:2em;">Settings APIs</h2>
+                <div class="api-list">
+                    <div class="api-item">
+                        <span class="api-method get">GET</span>
+                        <a href="/api/settings/playback-mode?mode=sequential" class="api-endpoint">/api/settings/playback-mode?mode=[value]</a>
+                        <p>Set playback mode.</p>
+                        <p><strong>Options:</strong> { "mode": "sequential" | "random" }</p>
+                    </div>
+                    <div class="api-item">
+                        <span class="api-method get">GET</span>
+                        <a href="/api/settings/timezone?tz=UTC0" class="api-endpoint">/api/settings/timezone?tz=[tz-string]</a>
+                        <p>Update the device timezone. Provide a POSIX TZ string (for example <code>CET-1CEST,M3.5.0/02,M10.5.0/03</code>).</p>
+                        <p><strong>Parameters:</strong> { "tz": string, required }</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2026 Pixel Matrix FX</p>
+        </footer>
+    </div>
+
+    <script src="js/ "></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
